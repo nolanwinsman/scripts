@@ -36,24 +36,9 @@ class show_struct():
         for s in self.seasons:
             episode_sum += len(self.seasons[s].episodes)
             for e in self.seasons[s].episodes:
-                print(f"E: {e} {self.seasons[s].episodes[e].found}")
+                print(f'S{s}E{e} {self.seasons[s].episodes[e].found}')
         print(f'\nKEY : {self.key}\nTITLE : {self.title}\nYEAR : {self.year} S: {len(self.seasons)} Total Episodes : {episode_sum}')
         print("------------------------------")
-    # def rename(self):
-    #     if len(self.new_file_name) > 0 and len(self.new_folder_name) > 0:
-    #         # renaming file
-    #         old_name = self.absolute_path
-    #         new_name = os.path.join(self.path, self.new_file_name)
-    #         if old_name != new_name:
-    #             print(f'Renaming {self.key} to {self.new_file_name}')
-    #             os.rename(old_name, new_name)
-    #         # renaming folder
-    #         old_name = self.path
-    #         parent = str(Path(self.path).parent.absolute())
-    #         new_name = os.path.join(parent, self.new_folder_name)
-    #         if old_name != new_name:
-    #             print(f'Renaming {self.key} to {self.new_folder_name}')
-    #             os.rename(old_name, new_name)
 
 class season_struct():
     def __init__(self, season_number):
@@ -237,6 +222,7 @@ def main():
     fix_show_files()
     for key in GLOBAL_SHOWS:
         show = GLOBAL_SHOWS[key]
+        changelog = ""
         if show.failed == False:
             show.print()
             if not os.path.exists(show.new_absolute_path):
@@ -247,21 +233,22 @@ def main():
                 season.new_absolute_path = season_folder
                 if not os.path.exists(season_folder):
                     os.mkdir(season_folder)
-                print(f'Creating Folder {season_folder}\n in {show.new_absolute_path}\n')
+                    print(f'Creating Folder {season_folder}\n in {show.new_absolute_path}\n')
                 for e in show.seasons[s].episodes:
                     episode = season.episodes[e]
                     if episode.found:
                         new_e_path = os.path.join(season_folder, episode.new_file_name)
                         print(f'\nRenaming and Moving: \n{episode.absolute_path}\n{new_e_path}\n')
-                        print(f'YTOLO\n{episode.absolute_path}\n{new_e_path}\n')
                         os.rename(episode.absolute_path, new_e_path)
                 if season_folder != season.absolute_path:
                     TO_DELETE.append(season.absolute_path)
+                    changelog += f"Deleting {season.absolute_path}\n"
             if show.absolute_path != show.new_absolute_path:
                 TO_DELETE.append(show.absolute_path)
+                changelog += f"Deleting {show.absolute_path}\n"
             changelog_path = os.path.join(show.new_absolute_path, "changelog.txt")
             with open(changelog_path, 'w') as f: 
-                f.write('no changes')
+                f.write(changelog)
                 f.close() 
 
     for filename in TO_DELETE:
