@@ -37,7 +37,8 @@ class show_struct():
         for s in self.seasons:
             episode_sum += len(self.seasons[s].episodes)
             for e in self.seasons[s].episodes:
-                print(f'S{s}E{e} {self.seasons[s].episodes[e].found}')
+                break
+                # print(f'S{s}E{e} {self.seasons[s].episodes[e].found}')
         print(f'\nKEY : {self.key}\nTITLE : {self.title}\nYEAR : {self.year} S: {len(self.seasons)} Total Episodes : {episode_sum}')
         print("------------------------------")
 
@@ -61,7 +62,8 @@ class episode_struct():
         self.found = False
 
 def show_not_found(path):
-    print(f"Show not found for \n{path}\n\nType show name (with year) to search the proper name\nLeave input Blank to skip\n")
+    print("----------")
+    print(f"Show not found for {path}\nType show name to search the proper name\nLeave input Blank to skip\n")
     i = input()
     if i == "":
         GLOBAL_SHOWS[path] = show_struct("null", "null", "null", "null", "null", "null", "null", failed = True, movie_db = None)
@@ -76,8 +78,12 @@ def get_seasons_and_episodes(series):
         num_episodes = len(series['episodes'][s])
         seasons[s] = season_struct(num_seasons)
         for e in range(1, num_episodes + 1):
-            e_name = series['episodes'][s][e]
-            seasons[s].episodes[e] = episode_struct(e_name, s, e)
+            print(f"S:{s} E:{e}")
+            try:
+                e_name = series['episodes'][s][e]
+                seasons[s].episodes[e] = episode_struct(e_name, s, e)
+            except KeyError:
+                print("S{s}E{e} Data not found")
     return seasons
 
 
