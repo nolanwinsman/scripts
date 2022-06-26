@@ -12,7 +12,6 @@ DIRECTORY = str(sys.argv[1])
 TO_DELETE = []
 ILLEGAL_CHARS = ['\\','/',':','*','?','"','<','>','|'] #list of illegal chars for Windows
 EXTENSIONS = ['.mp4', '.mkv', '.mov', '.avi']
-MAIN_SHOW_FOLDER = set()
 
 
 # struct for television shows
@@ -31,7 +30,9 @@ class show_struct():
         self.movie_db = movie_db # all the results for the database query, to reduce redundancy
         self.new_file_name = ''
         self.new_folder_name = ''
+        self.single_file = False
     def print(self):
+        print(f"------{self.key}-----")
         episode_sum = 0
         for s in self.seasons:
             episode_sum += len(self.seasons[s].episodes)
@@ -88,7 +89,6 @@ def show_details_kickoff(name, path):
     else:
         id = shows[0].getID()
         series = ia.get_movie(id)
-        print(series['kind'])
         if series['kind'] == 'tv series' or series['kind'] == 'tv mini series':
             year = series['year']
             print(f'Is the series {series} ({year})')
@@ -106,7 +106,6 @@ def show_details(name, path, r):
     else:
         id = shows[r].getID()
         series = ia.get_movie(id)
-        print(series['kind'])
         if series['kind'] == 'tv series' or series['kind'] == 'tv mini series':
             year = series['year']
             print(f'Is the series {series} ({year})')
@@ -124,7 +123,7 @@ def get_episode_number(filename):
           e|x|episode|E|^           # e or x or episode or start of a line
           )                       # end non-grouping pattern 
         \s*                       # 0-or-more whitespaces
-        ([0-9]+)                  # exactly 2 digits
+        (\d{1,3})                 # 1 to 3 digits
         ''', filename)
     if match:
         return match.group(1)
@@ -136,7 +135,7 @@ def get_seasons_number(filename):
           s|season|^              # e or x or episode or start of a line
           )                       # end non-grouping pattern 
         \s*                       # 0-or-more whitespaces
-        ([0-9]+)                  # exactly 2 digits
+        (\d{1,3})                 # 1 to 3 digits
         ''', filename)
     if match:
         return match.group(1)
@@ -155,57 +154,84 @@ def add_zeros(n):
 
 # def validate(key):
 
+def proper_log(s):
+    print(s)
+    return s
+
+def fill_data(file, subdir, key):
+    # uses regex to get the episode and season number
+    e_num = int(get_episode_number(file).lstrip('0'))
+    s_num = int(get_seasons_number(file).lstrip('0'))
+
+    file_extension = Path(file).suffix
+    title = GLOBAL_SHOWS[key].title
+    episode_title = GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].episode_title
+    new_file_name = remove_illegal(f'{title} S0{s_num}E{add_zeros(e_num)} {episode_title}{file_extension}')
+
+
+    # puts the information into the dictionary that holds all the data
+    GLOBAL_SHOWS[key].seasons[s_num].absolute_path = os.path.join(DIRECTORY, subdir)
+    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].path = subdir
+    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].absolute_path = os.path.join(subdir, file)
+    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].filename = os.path.join(subdir, file)
+    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].found = True
+    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].new_file_name = new_file_name
+
+    # Covers and edge case where the absolute path was wrong
+    if GLOBAL_SHOWS[key].single_file:
+        GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].absolute_path = os.path.join(DIRECTORY, file)
+
+
+
 
 def fix_show_files():
     # loops through all files directories and subdirectories
     for d in os.listdir(DIRECTORY):
-        already_done = False
+        skip_fetch_data = False
+        for ext in EXTENSIONS:
+            if d.endswith(ext):
+                show_details_kickoff(name = d, path = d)
+                GLOBAL_SHOWS[d].single_file = True
+                fill_data(d, d, d) # puts all the data into GLOBAL_SHOWS
+
+                skip_fetch_data = True
         for subdir, _, files in os.walk(d):
             parent = str(Path(subdir).parent.absolute())
             if os.path.isfile(os.path.join(subdir, "changelog.txt")) or os.path.isfile(os.path.join(parent, "changelog.txt")):
                 print(f"Script has already changed directory {d}, skipping directory")
                 GLOBAL_SHOWS[d] = show_struct("null", "null", "null", "null", "null", "null", "null", failed = True, movie_db = None)
-                already_done = True
+                skip_fetch_data = True
                 break
-        if not already_done:
+        if not skip_fetch_data:
             print(f'\n\n-----{d}-----\n\n')
-            MAIN_SHOW_FOLDER.add(d)
+            showname = os.path.basename(d)
             show_details_kickoff(name = os.path.basename(d), path = d)
             if GLOBAL_SHOWS[d].failed == True:
-                continue
-            for file in files:
+                break
+            for subdir, _, files in os.walk(d):
+                for file in files:
+                    print(f"FILE IS : {file}")
+                    if (file.endswith(".txt") or file.endswith(".exe") or file.endswith(".jpg")):
+                        print(f"Deleting file {file}")
+                        os.remove(os.path.join(subdir, file))
+                        continue
+                    
+                    if (file.endswith(".nfo") or file.endswith(".idx") or file.endswith(".sub")):
+                        print(f"Deleting {file}")
+                        os.remove(os.path.join(subdir, file))
+                        continue
 
-                if (file.endswith(".txt") or file.endswith(".exe") or file.endswith(".jpg")):
-                    print(f"Deleting file {file}")
-                    os.remove(os.path.join(subdir, file))
-                    continue
-                
-                if (file.endswith(".nfo") or file.endswith(".idx") or file.endswith(".sub")):
-                    print(f"Deleting {file}")
-                    os.remove(os.path.join(subdir, file))
-                    continue
-
-
-                for ext in EXTENSIONS:
-                    if file.endswith(ext):
-                        if "sample" in file.lower():
-                            os.remove(os.path.join(subdir, file))
-                        # potentiall make sure it's a video file
-                        print(file)
-                        e_num = int(get_episode_number(file).lstrip('0'))
-                        s_num = int(get_seasons_number(file).lstrip('0'))
-                        # result = re.findall("\d[s]{0,99}[e]{0,99}", file) # finds groups of 1, 2, or 3 connected digits followed by any one of 'F', 'f', 'C', or 'c'
-                        file_extension = Path(file).suffix
-                        title = GLOBAL_SHOWS[d].title
-                        episode_title = GLOBAL_SHOWS[d].seasons[s_num].episodes[e_num].episode_title
-                        new_file_name = remove_illegal(f'{title} S0{s_num}E{add_zeros(e_num)} {episode_title}{file_extension}')
-
-                        GLOBAL_SHOWS[d].seasons[s_num].absolute_path = os.path.join(DIRECTORY, subdir)
-                        GLOBAL_SHOWS[d].seasons[s_num].episodes[e_num].path = subdir
-                        GLOBAL_SHOWS[d].seasons[s_num].episodes[e_num].absolute_path = os.path.join(subdir, file)
-                        GLOBAL_SHOWS[d].seasons[s_num].episodes[e_num].filename = os.path.join(subdir, file)
-                        GLOBAL_SHOWS[d].seasons[s_num].episodes[e_num].found = True
-                        GLOBAL_SHOWS[d].seasons[s_num].episodes[e_num].new_file_name = new_file_name
+                    # loops through video file extensions
+                    for ext in EXTENSIONS:
+                        if file.endswith(ext):
+                            if "sample" in file.lower():
+                                print(f"Deleting {file}")
+                                os.remove(os.path.join(subdir, file))
+                                continue
+                            else:
+                                fill_data(file, subdir, d) # puts all the data into GLOBAL_SHOWS
+                              
+                           
 
 
 
@@ -219,9 +245,11 @@ def main():
     #     # show = GLOBAL_SHOWS[key]
     #     validate(key)
     
-    fix_show_files()
+    fix_show_files() # this function fetches the data from IMDB and stores the information in the dictionary GLOBAL_SHOWS
+
     for key in GLOBAL_SHOWS:
         show = GLOBAL_SHOWS[key]
+        print(f"SHOW IS : {key}")
         changelog = ""
         if show.failed == False:
             show.print()
@@ -233,12 +261,12 @@ def main():
                 season.new_absolute_path = season_folder
                 if not os.path.exists(season_folder):
                     os.mkdir(season_folder)
-                    print(f'Creating Folder {season_folder}\n in {show.new_absolute_path}\n')
+                    changelog += proper_log(f'Creating Folder {season_folder}\n in {show.new_absolute_path}\n')
                 for e in show.seasons[s].episodes:
                     episode = season.episodes[e]
                     if episode.found:
                         new_e_path = os.path.join(season_folder, episode.new_file_name)
-                        print(f'\nRenaming and Moving: \n{episode.absolute_path}\n{new_e_path}\n')
+                        changelog += proper_log(f'\nRenaming and Moving: \n{episode.absolute_path}\n{new_e_path}\n')
                         os.rename(episode.absolute_path, new_e_path)
                 if season_folder != season.absolute_path:
                     TO_DELETE.append(season.absolute_path)
@@ -246,15 +274,16 @@ def main():
             if show.absolute_path != show.new_absolute_path:
                 TO_DELETE.append(show.absolute_path)
                 changelog += f"Deleting {show.absolute_path}\n"
+            # writes the changelog to the directory folder which should be the root for an individual tv show 
             changelog_path = os.path.join(show.new_absolute_path, "changelog.txt")
-            with open(changelog_path, 'w') as f: 
+            with open(changelog_path, 'a+') as f: 
                 f.write(changelog)
                 f.close() 
 
     for filename in TO_DELETE:
         if filename is None:
             continue
-        print(f'Deleting {filename}')
+        print(f'Deleting this {filename}')
         try:
             if os.path.isdir(filename):
                 os.rmdir(filename)
