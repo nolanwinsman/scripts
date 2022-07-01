@@ -78,12 +78,11 @@ def get_seasons_and_episodes(series):
         num_episodes = len(series['episodes'][s])
         seasons[s] = season_struct(num_seasons)
         for e in range(1, num_episodes + 1):
-            print(f"S:{s} E:{e}")
             try:
                 e_name = series['episodes'][s][e]
                 seasons[s].episodes[e] = episode_struct(e_name, s, e)
             except KeyError:
-                print("S{s}E{e} Data not found")
+                print(f"S{s}E{e} Data not found")
     return seasons
 
 
@@ -167,22 +166,32 @@ def proper_log(s):
 
 def fill_data(file, subdir, key):
     # uses regex to get the episode and season number
-    e_num = int(get_episode_number(file).lstrip('0'))
-    s_num = int(get_seasons_number(file).lstrip('0'))
+    try:
+        e_num = int(get_episode_number(file).lstrip('0'))
+        s_num = int(get_seasons_number(file).lstrip('0'))
+    except ValueError:
+        print(f"Cannot cast to int for {file} S{get_seasons_number(file).lstrip('0')} E{get_episode_number(file).lstrip('0')}\n")
+        show_not_found(key)
+        return
 
     file_extension = Path(file).suffix
     title = GLOBAL_SHOWS[key].title
-    episode_title = GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].episode_title
-    new_file_name = remove_illegal(f'{title} S0{s_num}E{add_zeros(e_num)} {episode_title}{file_extension}')
+    try:
+        episode_title = GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].episode_title
+        new_file_name = remove_illegal(f'{title} S0{s_num}E{add_zeros(e_num)} {episode_title}{file_extension}')
 
 
-    # puts the information into the dictionary that holds all the data
-    GLOBAL_SHOWS[key].seasons[s_num].absolute_path = os.path.join(DIRECTORY, subdir)
-    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].path = subdir
-    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].absolute_path = os.path.join(subdir, file)
-    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].filename = os.path.join(subdir, file)
-    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].found = True
-    GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].new_file_name = new_file_name
+        # puts the information into the dictionary that holds all the data
+        GLOBAL_SHOWS[key].seasons[s_num].absolute_path = os.path.join(DIRECTORY, subdir)
+        GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].path = subdir
+        GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].absolute_path = os.path.join(subdir, file)
+        GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].filename = os.path.join(subdir, file)
+        GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].found = True
+        GLOBAL_SHOWS[key].seasons[s_num].episodes[e_num].new_file_name = new_file_name
+    except KeyError:
+        print(f"{file}\nSeason {s_num} Episode {e_num} does not match to anything in IMDB")
+        return
+
 
     # Covers and edge case where the absolute path was wrong
     if GLOBAL_SHOWS[key].single_file:
@@ -216,8 +225,9 @@ def fix_show_files():
             if GLOBAL_SHOWS[d].failed == True:
                 break
             for subdir, _, files in os.walk(d):
+                print(subdir)
                 for file in files:
-                    print(f"FILE IS : {file}")
+
                     if (file.endswith(".txt") or file.endswith(".exe") or file.endswith(".jpg")):
                         print(f"Deleting file {file}")
                         os.remove(os.path.join(subdir, file))
@@ -256,7 +266,6 @@ def main():
 
     for key in GLOBAL_SHOWS:
         show = GLOBAL_SHOWS[key]
-        print(f"SHOW IS : {key}")
         changelog = ""
         if show.failed == False:
             show.print()
@@ -298,6 +307,8 @@ def main():
                 os.remove(filename)
         except FileNotFoundError:
             print("File not found, should be fine")
+        except OSError:
+            print(f"Directory {filename} not empty")
 
 if __name__ == "__main__":
     main()
