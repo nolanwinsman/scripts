@@ -7,10 +7,10 @@ import re # regex
 
 # GLOBAL VARIABLES
 GLOBAL_SHOWS = {}
-ia = imdb.IMDb() #calls the IMDb function to get an access object through which IMDB data can be retrieved
+ia = imdb.IMDb() # calls the IMDb function to get an access object through which IMDB data can be retrieved
 DIRECTORY = str(sys.argv[1])
 TO_DELETE = []
-ILLEGAL_CHARS = ['\\','/',':','*','?','"','<','>','|'] #list of illegal chars for Windows
+ILLEGAL_CHARS = ['\\','/',':','*','?','"','<','>','|'] # list of illegal chars for Windows
 EXTENSIONS = ['.mp4', '.mkv', '.mov', '.avi']
 
 
@@ -145,6 +145,8 @@ def get_seasons_number(filename):
         ''', filename)
     if match:
         return match.group(1)
+    else:
+        return None
 
 
 def remove_illegal(s):
@@ -173,6 +175,10 @@ def fill_data(file, subdir, key):
         print(f"Cannot cast to int for {file} S{get_seasons_number(file).lstrip('0')} E{get_episode_number(file).lstrip('0')}\n")
         show_not_found(key)
         return
+    except AttributeError:
+        print(f"Cannot cast to int for {file}")
+        return
+
 
     file_extension = Path(file).suffix
     title = GLOBAL_SHOWS[key].title

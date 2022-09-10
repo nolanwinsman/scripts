@@ -65,7 +65,12 @@ def movie_details_kickoff(file, path):
     else:
         id = movies[0].getID()
         movie = ia.get_movie(id)
-        if movie['kind'] == 'movie':
+        try:
+            kind = movie['kind']
+        except:
+            kind = None
+            print(f"\n\n\nKind not found for {movie}")
+        if kind == 'movie':
             print(f"{movie} ({movie['year']})")
             GLOBAL_MOVIES[file] = movie_struct(key = file, title = movie, year = movie['year'], path = path, recurse = 0, movie_db = movies)
         else:
@@ -81,7 +86,12 @@ def movie_details(file, path, r):
         return
     id = movies[r].getID() #stores the ID of the r result of the search (if r == 0 it's the first result and so on)
     movie = ia.get_movie(id) #gets the series
-    if movie['kind'] == 'movie':
+    try:
+        kind = movie['kind']
+    except:
+        kind = None
+        print(f"\n\n\n\nKind not found for {movie}")
+    if kind == 'movie':
         print(f"{movie} ({movie['year']})")
         GLOBAL_MOVIES[file] = movie_struct(key = file, title = movie, year = movie['year'], path = path, recurse = r, movie_db = movies)
     else:
@@ -105,6 +115,20 @@ def text_after_year(name):
             pointer = pointer
             return name[:pointer]
     return name
+
+def check_delete(file, subdir):
+    # deletes .txt and .exe files with "RARBG" in the filename
+    if (file.endswith(".txt") or file.endswith(".exe")):
+        print(f"Deleting file {file}")
+        os.remove(os.path.join(subdir, file))
+    
+    if (file.endswith(".nfo") or file.endswith(".idx") or file.endswith(".sub")):
+        print(f"Deleting {file}")
+        os.remove(os.path.join(subdir, file))
+
+    if (file.endswith(".png") or file.endswith(".jpg")):
+        print(f"Deleting {file}")
+        os.remove(os.path.join(subdir, file))
 
 def remove_periods(s):
     """Returns the string file with all periods removed
@@ -130,16 +154,7 @@ def fix_movie_file():
     # loops through all files directories and subdirectories
     for subdir, dirs, files in os.walk(DIRECTORY):
         for file in files:
-            # deletes .txt and .exe files with "RARBG" in the filename
-            if (file.endswith(".txt") or file.endswith(".exe")):
-                print(f"Deleting file {file}")
-                os.remove(os.path.join(subdir, file))
-                continue
-            
-            if (file.endswith(".nfo") or file.endswith(".idx") or file.endswith(".sub")):
-                print(f"Deleting {file}")
-                os.remove(os.path.join(subdir, file))
-                continue
+            check_delete(file, subdir)
             for ext in EXTENSIONS:
                 if file.endswith(ext) and not contains_multiple(subdir):
                     movie_details_kickoff(file = file, path = subdir)
@@ -168,6 +183,7 @@ def validate(key):
         print("Is this information correct?")
         GLOBAL_MOVIES[key].print()
         res = input()
+        print(res)
         if res != '': # the information is correct
             movie_details(file = key, path = GLOBAL_MOVIES[key].path, r = GLOBAL_MOVIES[key].recurse + 1)
             if key in GLOBAL_MOVIES:
