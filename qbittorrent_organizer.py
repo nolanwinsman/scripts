@@ -17,10 +17,10 @@ DIR = r"/mnt/mount"
 PATHS = {
         "movie": f"{DIR}/movies/",
         "show": f"{DIR}/shows/",
-        "anime": f"{DIR}/anime",
-        "cartoon": f"{DIR}/cartoons",
-        "cartoon-movie": f"{DIR}/cartoon-movies",
-        "anime-movie": f"{DIR}/anime-movies"
+        "anime": f"{DIR}/anime/",
+        "cartoon": f"{DIR}/cartoons/",
+        "cartoon-movie": f"{DIR}/cartoon-movies/",
+        "anime-movie": f"{DIR}/anime-movies/"
 }
 
 # instantiate a Client using the appropriate WebUI configuration
@@ -42,9 +42,9 @@ except qbittorrentapi.LoginFailed as e:
 # retrieve all torrents and set their download folder to the corresponding tag
 for torrent in qbt_client.torrents_info():
     # print(f'{torrent.name} ({torrent.state}) ({torrent.tags})')
-    
+
     # torrent tag is present
-    if len(torrent.tags) > 0:
-        p = f"{PATHS[torrent.tags]}/"
+    if len(torrent.tags) > 0 and torrent.tags in PATHS:
+        p = f"{PATHS[torrent.tags]}"
         print(f"Setting {torrent.name} location to {p}")
         torrent.set_location(p)
