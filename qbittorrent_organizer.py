@@ -42,6 +42,7 @@ except qbittorrentapi.LoginFailed as e:
 # retrieve all torrents and set their download folder to the corresponding tag
 for torrent in qbt_client.torrents_info():
     # print(f'{torrent.name} ({torrent.state}) ({torrent.tags})')
+    
     # torrent tag is present
     if len(torrent.tags) > 0:
         p = f"{PATHS[torrent.tags]}/"
