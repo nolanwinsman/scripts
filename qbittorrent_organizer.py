@@ -5,7 +5,7 @@
 # Date : 10-17-2022
 
 
-import qbittorrentapi
+import qbittorrentapi # pip install qbittorrent-api
 
 # not used
 COMPLETE_STATES = ['pausedUP', 'uploading', 'stalledUP']
@@ -14,6 +14,7 @@ COMPLETE_STATES = ['pausedUP', 'uploading', 'stalledUP']
 DIR = r"/mnt/mount"
 
 # dictionary to map torrent tags to folders
+# the key is the torrent tag and the value is the folder it should be put in
 PATHS = {
         "movie": f"{DIR}/movies/",
         "show": f"{DIR}/shows/",
