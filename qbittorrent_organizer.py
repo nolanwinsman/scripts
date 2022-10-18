@@ -7,6 +7,9 @@
 
 import qbittorrentapi # pip install qbittorrent-api
 
+# documentation to API
+# https://qbittorrent-api.readthedocs.io/en/latest/introduction.html
+
 # not used
 COMPLETE_STATES = ['pausedUP', 'uploading', 'stalledUP']
 
