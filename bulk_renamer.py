@@ -1,6 +1,9 @@
 import os
 import sys
 
+# NOTE
+# in .bashrc add
+# alias bulk_renamer='python3 <path to .py script> "$PWD"'
 
 DIR = ""
 EXTENSIONS = ['.mp4', '.mkv', '.mov', '.avi']
@@ -37,6 +40,7 @@ def remove_from_front(n):
         elem.new.append(f"{temp[n:]}")
 
 def print_current():
+    print("-------Current Iteration of Renaming-------")
     for elem in files.values():
         print(elem.new[-1])
 
