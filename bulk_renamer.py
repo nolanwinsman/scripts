@@ -4,7 +4,7 @@ import shutil
 
 # NOTE
 # in .bashrc add
-# alias bulk_renamer='python3 <path to .py script> "$PWD"'
+# alias bulk_renamer='sudo python3 <path to .py script> "$PWD"'
 
 DIR = ""
 EXTENSIONS = ['.mp4', '.mkv', '.mov', '.avi']
