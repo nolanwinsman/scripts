@@ -1,6 +1,5 @@
 import os
 import sys
-import shutil
 
 # NOTE
 # in .bashrc add
@@ -55,8 +54,8 @@ def rename_files():
         print(f"Renaming {elem.original} to {elem.new[-1]}")
         old = os.path.join(elem.path, elem.original)
         new = os.path.join(elem.path, elem.new[-1])
-        # os.rename(old, new)
-        shutil.move(old, new)
+        os.rename(old, new)
+        # shutil.move(old, new)
     exit()
 
 def cleanup():
