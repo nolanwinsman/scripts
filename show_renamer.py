@@ -89,7 +89,7 @@ def get_seasons_and_episodes(series):
 
 def show_details_kickoff(name, path):
     shows = ia.search_movie(name)
-    print(len(shows))
+    print(f"{name} {len(shows)}")
     if len(shows) <= 0:
         show_not_found(path)
     else:
