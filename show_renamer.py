@@ -68,7 +68,7 @@ def show_not_found(path):
     if i == "":
         GLOBAL_SHOWS[path] = show_struct("null", "null", "null", "null", "null", "null", "null", failed = True, movie_db = None)
     else:
-        show_details(i, path)
+        show_details_kickoff(i, path)
 
 def get_seasons_and_episodes(series):
     seasons = {}
@@ -89,6 +89,7 @@ def get_seasons_and_episodes(series):
 
 def show_details_kickoff(name, path):
     shows = ia.search_movie(name)
+    print(len(shows))
     if len(shows) <= 0:
         show_not_found(path)
     else:
