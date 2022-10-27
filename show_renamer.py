@@ -86,6 +86,12 @@ def get_seasons_and_episodes(series):
     return seasons
 
 
+def yes_no():
+    i = input()
+    i = i.lower()
+    if i == "y" or i =="ye" or i == "yes":
+        return True
+    return False
 
 def show_details_kickoff(name, path):
     shows = ia.search_movie(name)
@@ -98,10 +104,13 @@ def show_details_kickoff(name, path):
         if series['kind'] == 'tv series' or series['kind'] == 'tv mini series':
             year = series['year']
             print(f'Is the series {series} ({year})')
-            seasons = get_seasons_and_episodes(series)
-            title = remove_illegal(str(series))
-            GLOBAL_SHOWS[path] = show_struct(key = name, title = title, year = year, path = path, seasons = seasons, recurse = 0, num_seasons = series['number of seasons'], 
-            movie_db = series)
+            if not yes_no():
+                seasons = get_seasons_and_episodes(series)
+                title = remove_illegal(str(series))
+                GLOBAL_SHOWS[path] = show_struct(key = name, title = title, year = year, path = path, seasons = seasons, recurse = 0, num_seasons = series['number of seasons'], 
+                movie_db = series)
+            else:
+                show_details(name, path, r + 1)
         else:
             GLOBAL_SHOWS[path] = show_struct("null", "null", "null", "null", "null", "null", "null", failed = True, movie_db = shows)
             show_details(name, path, 1)
@@ -116,10 +125,12 @@ def show_details(name, path, r):
         if series['kind'] == 'tv series' or series['kind'] == 'tv mini series':
             year = series['year']
             print(f'Is the series {series} ({year})')
-            seasons = get_seasons_and_episodes(series)
-            GLOBAL_SHOWS[path] = show_struct(key = name, title = str(series), year = year, path = path, seasons = seasons, recurse = 0, num_seasons = series['number of seasons'], 
-            movie_db = series)
-
+            if not yes_no():
+                seasons = get_seasons_and_episodes(series)
+                GLOBAL_SHOWS[path] = show_struct(key = name, title = str(series), year = year, path = path, seasons = seasons, recurse = 0, num_seasons = series['number of seasons'], 
+                movie_db = series)
+            else:
+                show_details(name, path, r + 1)
         else:
             show_details(name, path, r + 1)
 
