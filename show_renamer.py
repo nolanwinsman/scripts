@@ -68,7 +68,7 @@ def show_not_found(path):
     if i == "":
         GLOBAL_SHOWS[path] = show_struct("null", "null", "null", "null", "null", "null", "null", failed = True, movie_db = None)
     else:
-        show_details_kickoff(i, path)
+        show_details(i, path)
 
 def get_seasons_and_episodes(series):
     seasons = {}
